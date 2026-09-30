@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RetailSMS Gateway | SMPP & REST Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📨</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation / Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-title">
+        RetailSMS <span class="badge">SMPP 3.4</span>
+      </div>
+    </div>
+
+    <div class="header-status-group">
+      <!-- Built-in Mock Simulator Quick Toggle -->
+      <button id="btn-toggle-sim" class="sim-pill" title="Toggle Built-in Mock SMPP Server for zero-setup local testing">
+        <span id="sim-indicator">🤖</span>
+        <span id="sim-label">Simulator: Off</span>
+      </button>
+
+      <!-- SMPP Live Connection Status -->
+      <div id="smpp-status-pill" class="status-pill status-DISCONNECTED" title="Aggregator Connection Status">
+        <span class="status-dot"></span>
+        <span id="smpp-status-label">DISCONNECTED</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="nav-sidebar">
+      <button class="nav-btn active" data-tab="tab-send">
+        <span class="icon">✉️</span> Send SMS
+      </button>
+      <button class="nav-btn" data-tab="tab-messages">
+        <span class="icon">📊</span> Messages & DLR
+      </button>
+      <button class="nav-btn" data-tab="tab-settings">
+        <span class="icon">⚙️</span> SMPP Settings
+      </button>
+      <button class="nav-btn" data-tab="tab-api">
+        <span class="icon">🚀</span> API & Sandbox
+      </button>
+      <button class="nav-btn" data-tab="tab-logs">
+        <span class="icon">📜</span> Live Logs
+      </button>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- KPI Summary Cards -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Messages</div>
+          <div class="stat-value" id="kpi-total">0</div>
+        </div>
+        <div class="stat-card delivered">
+          <div class="stat-label">Delivered</div>
+          <div class="stat-value" id="kpi-delivered">0</div>
+        </div>
+        <div class="stat-card queued">
+          <div class="stat-label">In Queue / Sending</div>
+          <div class="stat-value" id="kpi-queued">0</div>
+        </div>
+        <div class="stat-card failed">
+          <div class="stat-label">Failed / Undelivered</div>
+          <div class="stat-value" id="kpi-failed">0</div>
+        </div>
+      </section>
+
+      <!-- TAB 1: SEND SMS -->
+      <section id="tab-send" class="tab-pane active">
+        <div class="card">
+          <h2 class="card-title">Compose & Broadcast SMS</h2>
+          <p class="card-subtitle">Dispatch real-time SMS through your SMPP connection. Supports single numbers, comma/newline lists, and Arabic/Unicode.</p>
+
+          <form id="form-send-sms">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="send-from">Sender ID (Alphanumeric / Number)</label>
+                <input type="text" id="send-from" class="form-input" placeholder="e.g. RetailAlert or +12345" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="send-to">Recipient(s) Phone Number (E.164 format)</label>
+                <input type="text" id="send-to" class="form-input" placeholder="+12025550143, +447911123456" required>
+                <small style="color: var(--text-dim); font-size: 0.78rem;">Separate multiple numbers with commas or newlines for bulk delivery</small>
+              </div>
+            </div>
+
+            <!-- Quick Template Buttons -->
+            <div class="form-group">
+              <label class="form-label">Quick Templates</label>
+              <div class="template-pills">
+                <button type="button" class="tpl-btn" data-tpl="Your order #10492 has been shipped! Track delivery at https://track.example.com">📦 Order Shipped</button>
+                <button type="button" class="tpl-btn" data-tpl="Your RetailStore verification code is: 839210. Valid for 5 minutes. Do not share.">🔐 OTP Code</button>
+                <button type="button" class="tpl-btn" data-tpl="Flash Sale! Get 25% OFF with code FLASH25 at checkout today only: https://example.com/sale">🏷️ Discount Alert</button>
+                <button type="button" class="tpl-btn" data-tpl="عزيزي العميل، تم تأكيد طلبك بنجاح وسنقوم بالتوصيل قريباً!">🇸🇦 Arabic Message (UCS-2)</button>
+              </div>
+            </div>
+
+            <!-- Message Body -->
+            <div class="form-group">
+              <label class="form-label" for="send-text">Message Content</label>
+              <textarea id="send-text" class="form-textarea" placeholder="Type your SMS message here..." required></textarea>
+
+              <!-- Dynamic Character / Segment / Encoding Counter -->
+              <div class="composer-meta">
+                <div class="meta-badges">
+                  <span id="badge-encoding" class="meta-pill gsm">GSM-7</span>
+                  <span id="badge-parts" class="meta-pill parts">1 SMS Part</span>
+                </div>
+                <div>
+                  <span id="char-count">0</span> / <span id="char-max">160</span> characters (<span id="chars-remaining">160</span> left in segment)
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                <input type="checkbox" id="force-unicode"> Force UCS-2 Unicode (UTF-16)
+              </label>
+              <button type="submit" id="btn-submit-send" class="btn btn-primary">
+                <span>🚀 Send Message Now</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 2: MESSAGES & DLR -->
+      <section id="tab-messages" class="tab-pane" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>SMS Transmission History & Delivery Reports</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btn-refresh-messages" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+              <button id="btn-export-csv" class="btn btn-secondary btn-sm">📥 Export CSV</button>
+            </div>
+          </div>
+          <p class="card-subtitle">Real-time status updates received from the SMS aggregator via SMPP delivery receipts (DLR).</p>
+
+          <!-- Search & Filter Controls -->
+          <div class="form-grid-3" style="margin-bottom: 1rem;">
+            <div>
+              <input type="text" id="filter-search" class="form-input" placeholder="🔍 Search text, phone, or ID...">
+            </div>
+            <div>
+              <select id="filter-status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="QUEUED">Queued</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="FAILED">Failed / Rejected</option>
+              </select>
+            </div>
+            <div>
+              <button id="btn-apply-filter" class="btn btn-secondary" style="width: 100%;">Filter</button>
+            </div>
+          </div>
+
+          <!-- Messages Table -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Recipient</th>
+                  <th>Sender</th>
+                  <th>Message Preview</th>
+                  <th>Parts</th>
+                  <th>Encoding</th>
+                  <th>Aggregator ID</th>
+                  <th>Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="messages-table-body">
+                <tr>
+                  <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No messages yet. Send your first SMS above!</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SMPP SETTINGS -->
+      <section id="tab-settings" class="tab-pane" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>SMPP Aggregator Connection Parameters</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btn-smpp-connect" class="btn btn-success btn-sm">⚡ Connect</button>
+              <button id="btn-smpp-disconnect" class="btn btn-danger btn-sm">🔌 Disconnect</button>
+            </div>
+          </div>
+          <p class="card-subtitle">Configure your SMS aggregator's SMPP host, credentials, bind type, and rate limits.</p>
+
+          <form id="form-smpp-settings">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="cfg-host">Aggregator SMPP Host / IP</label>
+                <input type="text" id="cfg-host" class="form-input" placeholder="smpp.aggregator.com or 127.0.0.1" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-port">SMPP Port</label>
+                <input type="number" id="cfg-port" class="form-input" placeholder="2775" required>
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="cfg-system-id">System ID (Username)</label>
+                <input type="text" id="cfg-system-id" class="form-input" placeholder="e.g. retail_user" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-password">Password</label>
+                <input type="password" id="cfg-password" class="form-input" placeholder="Aggregator password">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-system-type">System Type (Optional)</label>
+                <input type="text" id="cfg-system-type" class="form-input" placeholder="e.g. SMPP, or blank">
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="cfg-bind-mode">Bind Mode</label>
+                <select id="cfg-bind-mode" class="form-select">
+                  <option value="transceiver">Transceiver (Recommended: 2-Way Send & Receive DLR)</option>
+                  <option value="transmitter">Transmitter (Send Only)</option>
+                  <option value="receiver">Receiver (Receive Only)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-tps">Throughput Limit (TPS - Messages/Sec)</label>
+                <input type="number" id="cfg-tps" class="form-input" min="1" max="500" value="10" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-keepalive">Keepalive Interval (Seconds)</label>
+                <input type="number" id="cfg-keepalive" class="form-input" min="5" max="300" value="30" required>
+              </div>
+            </div>
+
+            <div class="form-grid-4">
+              <div class="form-group">
+                <label class="form-label" for="cfg-source-ton">Source TON</label>
+                <select id="cfg-source-ton" class="form-select">
+                  <option value="5">5 (Alphanumeric)</option>
+                  <option value="1">1 (International)</option>
+                  <option value="0">0 (Unknown)</option>
+                  <option value="2">2 (National)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-source-npi">Source NPI</label>
+                <select id="cfg-source-npi" class="form-select">
+                  <option value="0">0 (Unknown)</option>
+                  <option value="1">1 (ISDN / E.164)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-dest-ton">Destination TON</label>
+                <select id="cfg-dest-ton" class="form-select">
+                  <option value="1">1 (International)</option>
+                  <option value="0">0 (Unknown)</option>
+                  <option value="2">2 (National)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cfg-dest-npi">Destination NPI</label>
+                <select id="cfg-dest-npi" class="form-select">
+                  <option value="1">1 (ISDN / E.164)</option>
+                  <option value="0">0 (Unknown)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="cfg-default-sender">Default Sender ID</label>
+              <input type="text" id="cfg-default-sender" class="form-input" placeholder="RetailAlert">
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+              <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+              <button type="button" id="btn-use-simulator-creds" class="btn btn-secondary">⚡ Load Local Simulator Settings (127.0.0.1:2775)</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 4: API & SANDBOX -->
+      <section id="tab-api" class="tab-pane" style="display: none;">
+        <!-- API Key Card -->
+        <div class="card">
+          <h2 class="card-title">API Authentication Key</h2>
+          <p class="card-subtitle">Pass this key in the <code>X-API-Key</code> or <code>Authorization: Bearer &lt;key&gt;</code> HTTP header for external API requests.</p>
+
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <input type="text" id="display-api-key" class="form-input" style="font-family: var(--font-mono); font-size: 0.88rem;" readonly>
+            <button id="btn-copy-api-key" class="btn btn-secondary">📋 Copy</button>
+            <button id="btn-create-api-key" class="btn btn-secondary">+ New Key</button>
+          </div>
+        </div>
+
+        <!-- Interactive API Sandbox -->
+        <div class="card">
+          <h2 class="card-title">Interactive API Tester</h2>
+          <p class="card-subtitle">Test the <code>POST /api/v1/sms/send</code> endpoint directly from your browser.</p>
+
+          <div class="form-grid-2">
+            <div>
+              <div class="form-group">
+                <label class="form-label">Request Payload (JSON)</label>
+                <textarea id="api-sandbox-payload" class="form-textarea" style="font-family: var(--font-mono); min-height: 180px;">{
+  "to": "+12025550143",
+  "from": "RetailSMS",
+  "text": "Hello from API request!"
+}</textarea>
+              </div>
+              <button id="btn-run-api-test" class="btn btn-primary" style="width: 100%;">▶️ Send API Request</button>
+            </div>
+            <div>
+              <div class="form-group">
+                <label class="form-label">API Response</label>
+                <pre id="api-sandbox-response" class="code-block" style="min-height: 180px; margin: 0;">Click "Send API Request" to test...</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Integration Examples -->
+        <div class="card">
+          <h2 class="card-title">Integration Code Snippets</h2>
+          <p class="card-subtitle">Copy and paste ready-to-run examples in your favorite programming language.</p>
+
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <button class="btn btn-sm btn-secondary snippet-tab active" data-lang="curl">cURL</button>
+            <button class="btn btn-sm btn-secondary snippet-tab" data-lang="node">Node.js (Fetch)</button>
+            <button class="btn btn-sm btn-secondary snippet-tab" data-lang="python">Python</button>
+            <button class="btn btn-sm btn-secondary snippet-tab" data-lang="php">PHP</button>
+          </div>
+
+          <div class="code-block">
+            <button class="copy-btn" id="btn-copy-code">Copy</button>
+            <pre><code id="snippet-code-display">// Select a language above</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: LIVE LOGS -->
+      <section id="tab-logs" class="tab-pane" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>SMPP Protocol & System Traffic Logs</span>
+            <button id="btn-clear-logs" class="btn btn-secondary btn-sm">🗑️ Clear Logs</button>
+          </div>
+          <p class="card-subtitle">Real-time log stream of SMPP protocol PDUs (binds, submits, delivery receipts, keepalives).</p>
+
+          <div id="terminal-container" class="terminal-view">
+            <!-- Dynamic Log Stream -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Message Detail Modal -->
+  <div id="msg-detail-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Message Details</h3>
+        <button id="btn-close-modal" class="btn btn-secondary btn-sm">✕</button>
+      </div>
+      <div id="modal-body">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
