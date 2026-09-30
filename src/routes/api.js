@@ -198,6 +198,7 @@ module.exports = function createApiRouter({ smppClient, simulator, broadcastWs }
       smppClient.updateConfig({
         host: updated.smpp.host,
         port: updated.smpp.port,
+        tls: updated.smpp.tls,
         systemId: updated.smpp.systemId,
         password: updated.smpp.password,
         systemType: updated.smpp.systemType,

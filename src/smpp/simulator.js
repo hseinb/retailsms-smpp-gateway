@@ -31,7 +31,7 @@ class SmppSimulator extends EventEmitter {
           }
         });
 
-        this.server.listen(this.port, () => {
+        this.server.listen(this.port, '127.0.0.1', () => {
           this.isRunning = true;
           this.emit('started', this.port);
           resolve(this.port);

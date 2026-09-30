@@ -33,6 +33,7 @@ function broadcastWs(data) {
 const smppClient = new SmppClient({
   host: config.smpp.host,
   port: config.smpp.port,
+  tls: config.smpp.tls,
   systemId: config.smpp.systemId,
   password: config.smpp.password,
   systemType: config.smpp.systemType,

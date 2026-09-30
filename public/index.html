@@ -289,6 +289,15 @@
               <input type="text" id="cfg-default-sender" class="form-input" placeholder="RetailAlert">
             </div>
 
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.9rem; color: #e2e8f0;">
+                <input type="checkbox" id="cfg-tls"> <strong>🔒 Enable TLS / SSL Encryption (SMPPS)</strong>
+              </label>
+              <small style="color: var(--text-dim); display: block; margin-top: 0.25rem;">
+                Encrypts outbound SMPP traffic (credentials and SMS content) via TLS socket (commonly port 3550 or 2776).
+              </small>
+            </div>
+
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
               <button type="submit" class="btn btn-primary">💾 Save Settings</button>
               <button type="button" id="btn-use-simulator-creds" class="btn btn-secondary">⚡ Load Local Simulator Settings (127.0.0.1:2775)</button>

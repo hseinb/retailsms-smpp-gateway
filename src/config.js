@@ -18,6 +18,7 @@ const DEFAULTS = {
   SMPP_TPS_LIMIT: 10,            // Max messages per second
   SMPP_KEEPALIVE_INTERVAL: 30,   // In seconds
   SMPP_AUTO_CONNECT: false,
+  SMPP_TLS: false,               // TLS / SMPPS encryption
   SIMULATOR_PORT: 2775,
   SIMULATOR_ENABLED: false
 };
@@ -41,7 +42,8 @@ function getActiveConfig() {
       destNpi: parseInt(dbSettings.SMPP_DEST_NPI !== undefined ? dbSettings.SMPP_DEST_NPI : (process.env.SMPP_DEST_NPI || DEFAULTS.SMPP_DEST_NPI), 10),
       tps: parseInt(dbSettings.SMPP_TPS_LIMIT || process.env.SMPP_TPS_LIMIT || DEFAULTS.SMPP_TPS_LIMIT, 10),
       keepaliveInterval: parseInt(dbSettings.SMPP_KEEPALIVE_INTERVAL || process.env.SMPP_KEEPALIVE_INTERVAL || DEFAULTS.SMPP_KEEPALIVE_INTERVAL, 10),
-      autoConnect: (dbSettings.SMPP_AUTO_CONNECT !== undefined ? dbSettings.SMPP_AUTO_CONNECT === 'true' : (process.env.SMPP_AUTO_CONNECT === 'true' || DEFAULTS.SMPP_AUTO_CONNECT))
+      autoConnect: (dbSettings.SMPP_AUTO_CONNECT !== undefined ? dbSettings.SMPP_AUTO_CONNECT === 'true' : (process.env.SMPP_AUTO_CONNECT === 'true' || DEFAULTS.SMPP_AUTO_CONNECT)),
+      tls: (dbSettings.SMPP_TLS !== undefined ? dbSettings.SMPP_TLS === 'true' : (process.env.SMPP_TLS === 'true' || DEFAULTS.SMPP_TLS))
     },
     simulator: {
       port: parseInt(dbSettings.SIMULATOR_PORT || process.env.SIMULATOR_PORT || DEFAULTS.SIMULATOR_PORT, 10),
@@ -66,6 +68,7 @@ function updateConfig(newValues) {
   if (newValues.SMPP_TPS_LIMIT !== undefined) db.setSetting('SMPP_TPS_LIMIT', newValues.SMPP_TPS_LIMIT);
   if (newValues.SMPP_KEEPALIVE_INTERVAL !== undefined) db.setSetting('SMPP_KEEPALIVE_INTERVAL', newValues.SMPP_KEEPALIVE_INTERVAL);
   if (newValues.SMPP_AUTO_CONNECT !== undefined) db.setSetting('SMPP_AUTO_CONNECT', String(newValues.SMPP_AUTO_CONNECT));
+  if (newValues.SMPP_TLS !== undefined) db.setSetting('SMPP_TLS', String(newValues.SMPP_TLS));
   if (newValues.SIMULATOR_PORT !== undefined) db.setSetting('SIMULATOR_PORT', newValues.SIMULATOR_PORT);
   if (newValues.SIMULATOR_ENABLED !== undefined) db.setSetting('SIMULATOR_ENABLED', String(newValues.SIMULATOR_ENABLED));
 

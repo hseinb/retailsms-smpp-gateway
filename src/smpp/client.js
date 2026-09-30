@@ -97,13 +97,16 @@ class SmppClient extends EventEmitter {
       let resolved = false;
 
       try {
+        const isTls = Boolean(this.config.tls);
         this.session = smpp.connect({
           host,
           port,
+          tls: isTls,
+          rejectUnauthorized: this.config.rejectUnauthorized !== undefined ? Boolean(this.config.rejectUnauthorized) : true,
           auto_enquire_link_period: false // Handled manually for strict monitoring
         }, () => {
           this.setState('CONNECTED');
-          db.log('INFO', 'SMPP', `TCP Connection established with ${host}:${port}. Sending bind request...`);
+          db.log('INFO', 'SMPP', `${isTls ? 'TLS Encrypted' : 'TCP'} Connection established with ${host}:${port}. Sending bind request...`);
           this.bind()
             .then(() => {
               if (!resolved) {

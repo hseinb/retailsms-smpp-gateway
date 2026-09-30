@@ -494,6 +494,7 @@
       document.getElementById('cfg-dest-ton').value = cfg.smpp.destTon !== undefined ? cfg.smpp.destTon : 1;
       document.getElementById('cfg-dest-npi').value = cfg.smpp.destNpi !== undefined ? cfg.smpp.destNpi : 1;
       document.getElementById('cfg-default-sender').value = cfg.defaultSender || 'RetailAlert';
+      document.getElementById('cfg-tls').checked = Boolean(cfg.smpp.tls);
 
       // Pre-fill composer default sender
       const sendFrom = document.getElementById('send-from');
@@ -516,7 +517,8 @@
       SMPP_SOURCE_NPI: parseInt(document.getElementById('cfg-source-npi').value, 10),
       SMPP_DEST_TON: parseInt(document.getElementById('cfg-dest-ton').value, 10),
       SMPP_DEST_NPI: parseInt(document.getElementById('cfg-dest-npi').value, 10),
-      DEFAULT_SENDER: document.getElementById('cfg-default-sender').value.trim()
+      DEFAULT_SENDER: document.getElementById('cfg-default-sender').value.trim(),
+      SMPP_TLS: document.getElementById('cfg-tls').checked
     };
 
     try {
