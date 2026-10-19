@@ -1,8 +1,8 @@
 node_modules/
+.env
+.env.local
 *.db
-*.db-journal
 *.db-wal
 *.db-shm
-.env
+*.log
 .DS_Store
-Thumbs.db
